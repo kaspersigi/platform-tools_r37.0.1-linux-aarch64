@@ -77,7 +77,7 @@ while IFS= read -r dependency; do
         *) fail "libc++.so depends on unpackaged shared library $dependency" ;;
     esac
 done < <(readelf -d "$candidate/lib64/libc++.so" | sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p')
-nm -D --defined-only "$candidate/lib64/libc++.so" | grep -q '_ZNSt3__1' || \
+nm -D --defined-only "$candidate/lib64/libc++.so" | grep -F '_ZNSt3__1' >/dev/null || \
     fail "libc++.so exports no libc++ symbols"
 
 grep -Fxq 'Pkg.Revision=37.0.1' "$candidate/source.properties" || fail "unexpected package revision"

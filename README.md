@@ -1,7 +1,7 @@
 # Android SDK Platform-Tools for Linux AArch64
 
-This project rebuilds the current Android SDK Platform-Tools package for a
-GNU/Linux AArch64 host. The release archive contains the same paths as the
+This project rebuilds Android SDK Platform-Tools 37.0.1 for a GNU/Linux
+AArch64 host. The release archive contains the same paths as the
 locally installed Google Linux x86_64 package at
 `/mnt/develop/android/sdk/platform-tools`; only the host binaries and host
 runtime architecture change.
@@ -10,7 +10,7 @@ runtime architecture change.
 
 - Google binary package used as the layout and metadata reference: **37.0.1**
   (`37.0.1-15733141`).
-- Newest public AOSP release source line: **37.0.0**, from
+- Public AOSP release source line used by this project: **37.0.0**, from
   `android17-release`.
 - Output: `dist/platform-tools_r37.0.1-linux.zip`.
 
