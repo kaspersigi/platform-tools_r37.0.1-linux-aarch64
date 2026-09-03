@@ -89,7 +89,7 @@ fi
 # Ubuntu's amd64 archive does not carry arm64 packages. Use the official Ports
 # archive for the foreign architecture without permanently rewriting the
 # machine's existing apt sources.
-ports_sources="$(mktemp)"
+ports_sources="$(mktemp --suffix=.sources)"
 trap 'rm -f -- "$ports_sources"' EXIT
 cat > "$ports_sources" <<'EOF'
 Types: deb
