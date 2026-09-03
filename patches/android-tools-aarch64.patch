@@ -1,0 +1,64 @@
+diff --git a/vendor/CMakeLists.adb.txt b/vendor/CMakeLists.adb.txt
+index 8f766fc..eff9db4 100644
+--- a/vendor/CMakeLists.adb.txt
++++ b/vendor/CMakeLists.adb.txt
+@@ -240,9 +240,9 @@ target_link_libraries(adb
+ 	crypto
+ 	ssl
+ 	protobuf::libprotobuf
+-	PkgConfig::libbrotlicommon
+ 	PkgConfig::libbrotlidec
+ 	PkgConfig::libbrotlienc
++	PkgConfig::libbrotlicommon
+ 	PkgConfig::liblz4
+ 	Threads::Threads
+ 	z
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e2ac683..1cf67fb 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -33,7 +33,7 @@ set(ANDROID_VERSION 37.0.0)
+ set(BORINGSSL_VERSION d32c35e573fc9c8dbe0436805cd557065892de4c)
+ 
+ # Vendor string used in version outputs.
+-set(ANDROID_VENDOR android-tools)
++set(ANDROID_VENDOR android-tools-linux-aarch64-community)
+ 
+ configure_file(version.h.in vendor/build/version.h @ONLY)
+ configure_file(platform_tools_version.h.in vendor/platform_tools_version.h @ONLY)
+diff --git a/vendor/CMakeLists.f2fstools.txt b/vendor/CMakeLists.f2fstools.txt
+index b6e85ab..01a9ec0 100644
+--- a/vendor/CMakeLists.f2fstools.txt
++++ b/vendor/CMakeLists.f2fstools.txt
+@@ -33,6 +33,19 @@ add_executable(make_f2fs
+ target_link_libraries(make_f2fs PRIVATE
+ 	libf2fs libsparse z)
+ 
++# AOSP ships the same mkfs sources a second time with these definitions as
++# make_f2fs_casefold. Keep the standalone build layout identical to the SDK.
++add_executable(make_f2fs_casefold
++	f2fs-tools/lib/libf2fs_io.c
++	f2fs-tools/mkfs/f2fs_format_main.c)
++
++target_compile_definitions(make_f2fs_casefold PRIVATE
++	-DCONF_CASEFOLD
++	-DCONF_PROJID)
++
++target_link_libraries(make_f2fs_casefold PRIVATE
++	libf2fs libsparse z)
++
+ set(fsck_main_src_files
+ 	f2fs-tools/fsck/dir.c
+ 	f2fs-tools/fsck/dict.c
+diff --git a/vendor/CMakeLists.fastboot.txt b/vendor/CMakeLists.fastboot.txt
+index 3440d2c..2978920 100644
+--- a/vendor/CMakeLists.fastboot.txt
++++ b/vendor/CMakeLists.fastboot.txt
+@@ -9,6 +9,7 @@ target_compile_definitions(libzip PRIVATE -DZLIB_CONST)
+ target_include_directories(libzip PUBLIC
+ 	libziparchive/include
+ 	libziparchive/incfs_support/include
++	boringssl/third_party/googletest/googletest/include
+ 	core/include
+ 	logging/liblog/include
+ 	libbase/include)

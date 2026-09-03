@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+# shellcheck shell=bash
+
+# Google publishes Platform-Tools 37.0.1 as binaries, but the newest public
+# AOSP source line still identifies itself as 37.0.0. Keep both facts explicit.
+PLATFORM_TOOLS_PACKAGE_VERSION=37.0.1
+PLATFORM_TOOLS_PUBLIC_SOURCE_VERSION=37.0.0
+
+ANDROID_TOOLS_URL=https://github.com/nmeum/android-tools.git
+ANDROID_TOOLS_COMMIT=d4285173e3d1a64a8d262e769e1017e419ec0b83
+
+DEVELOPMENT_URL=https://android.googlesource.com/platform/development
+DEVELOPMENT_COMMIT=4dafd114fab3c3d9543a5aff0ad097f479915176
+
+DALVIK_URL=https://android.googlesource.com/platform/dalvik
+DALVIK_COMMIT=5013071e756f89aa2cea97b437af12aacb8d4485
+
+FRAMEWORKS_NATIVE_URL=https://android.googlesource.com/platform/frameworks/native
+FRAMEWORKS_NATIVE_COMMIT=ae266dcb706d083868578cfedce381ef44488a07
+
+SQLITE_URL=https://android.googlesource.com/platform/external/sqlite
+SQLITE_COMMIT=7961228217942c86f2b0bd2ae4115d00e157fc0b
+
+REFERENCE_URL=https://dl.google.com/android/repository/platform-tools_r37.0.1-linux.zip
+REFERENCE_SHA256=d230f13842f60f782a8645f9c813f8f845bf36089ea7289f28c48f17979313f1
+
