@@ -67,6 +67,29 @@ The packaged `lib64/libc++.so` is linked from Ubuntu 26.04's LLVM 22 AArch64
 static runtime and includes its C++ ABI implementation. It has no dependency
 on an unpackaged `libc++abi.so` or `libunwind.so`.
 
+## Repository dependencies
+
+This repository is an independently buildable producer of the Platform-Tools
+archive. It does not depend on the Android SDK assembly repository.
+
+- Its upstream inputs are the pinned public AOSP 37.0.0 source line and
+  Google's checksum-pinned 37.0.1 Linux x86_64 archive. The Google archive is
+  used only as the package-layout and metadata reference.
+- Its release output, `platform-tools_r37.0.1-linux.zip`, is a downstream input
+  of [`kaspersigi/android-sdk-linux-aarch64`](https://github.com/kaspersigi/android-sdk-linux-aarch64).
+  The SDK installs it as `platform-tools/` without rebuilding these programs.
+- The SDK resolves this repository's latest published full GitHub Release and
+  verifies the ZIP against the `.sha256` asset from that same Release. Local
+  builds and source commits without a published Release are not selected.
+- Release tags such as `v1.0.0` identify revisions of this repository's build
+  scripts. They do not change the locked Platform-Tools package/source boundary
+  of 37.0.1/37.0.0.
+
+After changing this project, publish and validate a new Platform-Tools Release
+first. The next SDK build selects it automatically as the latest Release; no
+SDK source change is needed unless the repository, asset name, or component
+source version changes.
+
 ## Sources
 
 The executable sources come from Android Open Source Project repositories. The
@@ -78,6 +101,13 @@ AArch64 result.
 
 ## CI and releases
 
-`.github/workflows/release.yml` builds on `ubuntu-26.04`. Every run uploads the
-zip and checksum as workflow artifacts. A pushed `v*` tag also creates a GitHub
-release and uploads those files.
+`.github/workflows/release.yml` builds on `ubuntu-26.04`. Every run verifies
+that the ZIP extracts to the exact assembled tree, then uploads the ZIP and
+checksum as workflow artifacts. A pushed `v*` tag also creates a GitHub Release
+and uploads those files.
+
+## License
+
+Repository-owned code is licensed under the Apache License 2.0; see
+[`LICENSE`](LICENSE) and [`NOTICE`](NOTICE). Upstream components retain their
+original licenses and notices in their corresponding source and package paths.

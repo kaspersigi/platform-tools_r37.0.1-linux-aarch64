@@ -1,0 +1,11 @@
+Android SDK Platform-Tools for Linux AArch64
+Copyright 2026 project contributors
+
+The repository-owned build scripts, integration files, tests, patches, and
+documentation are licensed under the Apache License, Version 2.0, except where
+an individual file states a different license.
+
+The produced package incorporates software from the Android Open Source
+Project and other upstream projects. Their license and notice files remain in
+the source checkouts or assembled package at the corresponding upstream paths.
+This community build is not produced or endorsed by Google.

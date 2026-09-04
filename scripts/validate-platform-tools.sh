@@ -5,6 +5,8 @@ set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 project_root="$(cd -- "$script_dir/.." && pwd -P)"
+# shellcheck source=../sources.lock
+source "$project_root/sources.lock"
 candidate="${1:-$project_root/dist/platform-tools}"
 reference="${REFERENCE_DIR:-/mnt/develop/android/sdk/platform-tools}"
 official_reference="$project_root/sources/reference/platform-tools"
@@ -80,35 +82,55 @@ done < <(readelf -d "$candidate/lib64/libc++.so" | sed -n 's/.*Shared library: \
 nm -D --defined-only "$candidate/lib64/libc++.so" | grep -F '_ZNSt3__1' >/dev/null || \
     fail "libc++.so exports no libc++ symbols"
 
-grep -Fxq 'Pkg.Revision=37.0.1' "$candidate/source.properties" || fail "unexpected package revision"
+grep -Fxq "Pkg.Revision=$PLATFORM_TOOLS_PACKAGE_VERSION" \
+    "$candidate/source.properties" || fail "unexpected package revision"
 
-if command -v qemu-aarch64 >/dev/null 2>&1; then
-    qemu_root="${TARGET_ROOT:-}"
-    if [[ -z "$qemu_root" ]]; then
-        if [[ -e /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1 ]]; then
-            qemu_root=/usr/aarch64-linux-gnu
-        else
-            qemu_root="$project_root/.cache/sysroot"
+runner=()
+case "$(uname -m)" in
+    aarch64|arm64) ;;
+    *)
+        command -v qemu-aarch64 >/dev/null 2>&1 ||
+            fail "qemu-aarch64 is required on a non-AArch64 host"
+        qemu_root="${TARGET_ROOT:-}"
+        if [[ -z "$qemu_root" ]]; then
+            if [[ -e /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1 ]]; then
+                qemu_root=/usr/aarch64-linux-gnu
+            else
+                qemu_root="$project_root/.cache/sysroot"
+            fi
         fi
-    fi
-    qemu=(qemu-aarch64 -L "$qemu_root")
-    "${qemu[@]}" "$candidate/adb" version
-    "${qemu[@]}" "$candidate/fastboot" --version
-    "${qemu[@]}" "$candidate/sqlite3" --version
-    "${qemu[@]}" "$candidate/mke2fs" -V 2>&1 | head -n 2
-    "${qemu[@]}" "$candidate/make_f2fs" -V
-    "${qemu[@]}" "$candidate/make_f2fs_casefold" -V
+        [[ -e "$qemu_root/lib/ld-linux-aarch64.so.1" ||
+           -e "$qemu_root/usr/lib/ld-linux-aarch64.so.1" ||
+           -e "$qemu_root/usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1" ]] ||
+            fail "no AArch64 runtime loader exists under $qemu_root"
+        runner=(qemu-aarch64 -L "$qemu_root")
+        ;;
+esac
 
-    set +e
-    etc1_help="$("${qemu[@]}" "$candidate/etc1tool" --help 2>&1)"
-    etc1_status=$?
-    hprof_help="$("${qemu[@]}" "$candidate/hprof-conv" 2>&1)"
-    hprof_status=$?
-    set -e
-    [[ "$etc1_status" == "1" && "$etc1_help" == *"--encodeNoHeader"* ]] || \
-        fail "etc1tool help smoke test failed"
-    [[ "$hprof_status" == "2" && "$hprof_help" == *"infile outfile"* ]] || \
-        fail "hprof-conv help smoke test failed"
-fi
+adb_version="$("${runner[@]}" "$candidate/adb" version)"
+printf '%s\n' "$adb_version"
+grep -Fq \
+    "Version $PLATFORM_TOOLS_PUBLIC_SOURCE_VERSION-android-tools-linux-aarch64-community" \
+    <<< "$adb_version" || fail "adb does not report the pinned public source version"
+fastboot_version="$("${runner[@]}" "$candidate/fastboot" --version)"
+printf '%s\n' "$fastboot_version"
+grep -Fq \
+    "fastboot version $PLATFORM_TOOLS_PUBLIC_SOURCE_VERSION-android-tools-linux-aarch64-community" \
+    <<< "$fastboot_version" || fail "fastboot does not report the pinned public source version"
+"${runner[@]}" "$candidate/sqlite3" --version
+"${runner[@]}" "$candidate/mke2fs" -V 2>&1 | head -n 2
+"${runner[@]}" "$candidate/make_f2fs" -V
+"${runner[@]}" "$candidate/make_f2fs_casefold" -V
+
+set +e
+etc1_help="$("${runner[@]}" "$candidate/etc1tool" --help 2>&1)"
+etc1_status=$?
+hprof_help="$("${runner[@]}" "$candidate/hprof-conv" 2>&1)"
+hprof_status=$?
+set -e
+[[ "$etc1_status" == "1" && "$etc1_help" == *"--encodeNoHeader"* ]] || \
+    fail "etc1tool help smoke test failed"
+[[ "$hprof_status" == "2" && "$hprof_help" == *"infile outfile"* ]] || \
+    fail "hprof-conv help smoke test failed"
 
 echo "Validated complete Platform-Tools 37.0.1 layout and AArch64 ELF architecture."

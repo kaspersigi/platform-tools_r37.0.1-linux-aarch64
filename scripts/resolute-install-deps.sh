@@ -49,6 +49,7 @@ else
 fi
 
 host_packages=(
+    binutils
     binutils-aarch64-linux-gnu
     ca-certificates
     cmake

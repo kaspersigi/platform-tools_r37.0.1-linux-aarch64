@@ -84,7 +84,8 @@ fi
 
 mkdir -p "$build_dir/android-tools" "$build_dir/extra"
 
-common_c_flags="-O2 -g0 -ffunction-sections -fdata-sections"
+reproducible_path_flags="-ffile-prefix-map=$project_root=platform-tools-build -fmacro-prefix-map=$project_root=platform-tools-build"
+common_c_flags="-O2 -g0 -ffunction-sections -fdata-sections $reproducible_path_flags"
 gtest_headers="$android_tools/vendor/boringssl/third_party/googletest/googletest/include"
 common_cxx_flags="$common_c_flags -I$gtest_headers -static-libstdc++ -static-libgcc"
 common_link_flags="-Wl,--gc-sections -static-libstdc++ -static-libgcc"
