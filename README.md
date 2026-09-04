@@ -14,6 +14,10 @@ runtime architecture change.
   `android17-release`.
 - Output: `dist/platform-tools_r37.0.1-linux.zip`.
 
+The archive uses sorted paths, stripped ZIP extra fields, and the fixed UTC
+timestamp `2008-01-01 00:00:00`, so unchanged assembled content packages to
+the same bytes.
+
 Google has not published a Linux AArch64 Platform-Tools binary package, and the
 public AOSP branch does not yet contain the private 37.0.1 build identity.
 Accordingly this is a community AArch64 reconstruction, not an official Google
@@ -29,12 +33,19 @@ distinction explicit.
 
 The dependency script enables Ubuntu's `arm64` multiarch repository, selects
 Ubuntu Ports for that architecture, and installs the AArch64 development
-libraries used by the cross build. The build
-script downloads pinned sources and the checksum-pinned Google x86_64 package,
-builds all eight executables, assembles the Platform-Tools directory, verifies
-the exact entry inventory, checks every ELF machine, rejects unpackaged
+libraries used by the cross build. The build script downloads pinned sources
+and the checksum-pinned Google x86_64 package, builds all eight executables,
+assembles the Platform-Tools directory, verifies the exact entry inventory,
+structurally parses every executable/shared ELF, rejects unpackaged
 shared-library dependencies, verifies and directly loads the component-local
 libc++ runtime, and runs smoke tests under QEMU when required.
+
+Incremental builds reuse sources only when their tracked diffs, non-ignored
+untracked-file content, nested repository revisions, upstream URLs, and the
+source-transformation policy match the state recorded after the preceding
+successful compilation. If provenance cannot be established, the build stops
+without overwriting local edits; run `CLEAN=1 ./scripts/resolute-local-build.sh`
+to recreate the generated source and build trees from their pinned inputs.
 
 Project policy requires every local build and validation run to use all
 processors reported by `nproc`. Do not set `JOBS=4` locally to imitate the

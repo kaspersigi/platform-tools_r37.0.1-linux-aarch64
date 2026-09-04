@@ -69,6 +69,13 @@ android_tools="$sources_dir/android-tools"
     exit 1
 }
 
+python3 -B "$project_root/scripts/source-state.py" verify \
+    "$sources_dir" "$build_dir/source-state.json" \
+    --policy-path "$project_root/scripts" \
+    --policy-path "$project_root/patches" \
+    --policy-path "$project_root/cmake" \
+    --policy-path "$project_root/sources.lock"
+
 # Apply the standalone build helper's compatibility patches without allowing
 # CMake to mutate Git history with `git am` on every reconfiguration. A marker
 # is needed because later patches in a series can touch the context needed to
@@ -204,3 +211,10 @@ aarch64-linux-gnu-strip \
     "$build_dir/extra/sqlite3"
 
 echo "All eight Platform-Tools executables were built for AArch64."
+
+python3 -B "$project_root/scripts/source-state.py" record \
+    "$sources_dir" "$build_dir/source-state.json" \
+    --policy-path "$project_root/scripts" \
+    --policy-path "$project_root/patches" \
+    --policy-path "$project_root/cmake" \
+    --policy-path "$project_root/sources.lock"

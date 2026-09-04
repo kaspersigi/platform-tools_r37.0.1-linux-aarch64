@@ -50,6 +50,8 @@ rm -f -- "$archive"
         zip -q -9 -X "$(basename -- "$archive")" -@
 )
 
+python3 -B "$project_root/scripts/check-zip-metadata.py" "$archive"
+
 (
     cd "$dist_dir"
     sha256sum "$(basename -- "$archive")" > "$(basename -- "$archive").sha256"

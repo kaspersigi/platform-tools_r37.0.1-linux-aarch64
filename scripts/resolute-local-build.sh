@@ -17,9 +17,14 @@ else
     jobs="$host_jobs"
 fi
 build_dir="$project_root/build"
+clean="${CLEAN:-0}"
 
 [[ "$jobs" =~ ^[1-9][0-9]*$ ]] || {
     echo "error: JOBS must be a positive integer" >&2
+    exit 2
+}
+[[ "$clean" == "0" || "$clean" == "1" ]] || {
+    echo "error: CLEAN must be 0 or 1" >&2
     exit 2
 }
 
@@ -36,6 +41,13 @@ if [[ "${ALLOW_UNSUPPORTED_HOST:-0}" != "1" ]] && {
 }; then
     echo "error: this build is fixed to Ubuntu 26.04 (Resolute)" >&2
     exit 1
+fi
+
+python3 -B "$project_root/tests/source_state_test.py"
+
+if [[ "$clean" == "1" ]]; then
+    echo "Removing generated sources, build trees, and packages..."
+    rm -rf -- "$project_root/sources" "$build_dir" "$project_root/dist"
 fi
 
 JOBS="$jobs" "$script_dir/fetch-sources.sh"

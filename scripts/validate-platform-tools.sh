@@ -16,7 +16,22 @@ fail() {
     exit 1
 }
 
+read_elf_dynamic_section() {
+    local path="$1" output
+
+    if ! output="$(readelf -d -- "$path" 2>&1)"; then
+        printf '%s\n' "$output" >&2
+        return 1
+    fi
+    if grep -Fq 'Error:' <<< "$output"; then
+        printf '%s\n' "$output" >&2
+        return 1
+    fi
+    printf '%s\n' "$output"
+}
+
 [[ -d "$candidate" ]] || fail "candidate directory is missing: $candidate"
+"$project_root/tests/check-aarch64-elf-test.sh"
 
 expected_entries=(
     NOTICE.txt
@@ -67,24 +82,30 @@ done
 executables=(adb etc1tool fastboot hprof-conv make_f2fs make_f2fs_casefold mke2fs sqlite3)
 for name in "${executables[@]}"; do
     [[ -x "$candidate/$name" ]] || fail "$name is not executable"
-    readelf -h "$candidate/$name" | grep -Eq 'Machine:.*AArch64' || fail "$name is not AArch64"
+    "$project_root/scripts/check-aarch64-elf.sh" "$candidate/$name"
+    dynamic_section="$(read_elf_dynamic_section "$candidate/$name")" ||
+        fail "cannot read $name dynamic section"
 
     while IFS= read -r dependency; do
         case "$dependency" in
             libc.so.6|libdl.so.2|libm.so.6|libpthread.so.0|librt.so.1|ld-linux-aarch64.so.1) ;;
             *) fail "$name depends on unpackaged shared library $dependency" ;;
         esac
-    done < <(readelf -d "$candidate/$name" | sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p')
+    done < <(sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p' \
+        <<< "$dynamic_section")
 done
-readelf -h "$candidate/lib64/libc++.so" | grep -Eq 'Machine:.*AArch64' || fail "libc++.so is not AArch64"
-readelf -d "$candidate/lib64/libc++.so" | grep -Fq 'Library soname: [libc++.so]' ||
+"$project_root/scripts/check-aarch64-elf.sh" "$candidate/lib64/libc++.so"
+dynamic_section="$(read_elf_dynamic_section "$candidate/lib64/libc++.so")" ||
+    fail "cannot read libc++.so dynamic section"
+grep -Fq 'Library soname: [libc++.so]' <<< "$dynamic_section" ||
     fail "libc++.so has an unexpected SONAME"
 while IFS= read -r dependency; do
     case "$dependency" in
         libc.so.6|libdl.so.2|libm.so.6|libpthread.so.0|librt.so.1|ld-linux-aarch64.so.1) ;;
         *) fail "libc++.so depends on unpackaged shared library $dependency" ;;
     esac
-done < <(readelf -d "$candidate/lib64/libc++.so" | sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p')
+done < <(sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p' \
+    <<< "$dynamic_section")
 nm -D --defined-only "$candidate/lib64/libc++.so" | grep -F '_ZNSt3__1' >/dev/null || \
     fail "libc++.so exports no libc++ symbols"
 

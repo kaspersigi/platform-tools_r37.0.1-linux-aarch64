@@ -25,11 +25,16 @@ clone_pinned() {
         git -C "$destination" checkout --detach "$commit"
     fi
 
-    local actual
+    local actual actual_url
     actual="$(git -C "$destination" rev-parse HEAD)"
+    actual_url="$(git -C "$destination" remote get-url origin)"
     if [[ "$actual" != "$commit" ]]; then
         echo "error: $name is at $actual, expected $commit" >&2
         echo "       remove $destination and run this script again" >&2
+        exit 1
+    fi
+    if [[ "$actual_url" != "$url" ]]; then
+        echo "error: $name origin is $actual_url, expected $url" >&2
         exit 1
     fi
 }
@@ -41,7 +46,15 @@ clone_pinned frameworks-native "$FRAMEWORKS_NATIVE_URL" "$FRAMEWORKS_NATIVE_COMM
 clone_pinned sqlite "$SQLITE_URL" "$SQLITE_COMMIT"
 
 echo "Initializing pinned android-tools submodules..."
+git -C "$sources_dir/android-tools" submodule sync --recursive
 git -C "$sources_dir/android-tools" submodule update --init --depth=1
+
+python3 -B "$project_root/scripts/source-state.py" verify \
+    "$sources_dir" "$project_root/build/source-state.json" \
+    --policy-path "$project_root/scripts" \
+    --policy-path "$project_root/patches" \
+    --policy-path "$project_root/cmake" \
+    --policy-path "$project_root/sources.lock"
 
 reference_archive="$cache_dir/platform-tools_r${PLATFORM_TOOLS_PACKAGE_VERSION}-linux.zip"
 reference_checksum="$REFERENCE_SHA256  $reference_archive"
