@@ -5,7 +5,17 @@ set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 project_root="$(cd -- "$script_dir/.." && pwd -P)"
-jobs="${JOBS:-$(nproc)}"
+host_jobs="$(nproc)"
+if [[ "${GITHUB_ACTIONS:-false}" == "true" ]]; then
+    jobs="${JOBS:-$host_jobs}"
+else
+    if [[ ${JOBS+x} == x && "$JOBS" != "$host_jobs" ]]; then
+        echo "error: local builds must use all $host_jobs processors reported by nproc" >&2
+        echo "       JOBS is reserved for GitHub Actions resource limits" >&2
+        exit 2
+    fi
+    jobs="$host_jobs"
+fi
 build_dir="$project_root/build"
 
 [[ "$jobs" =~ ^[1-9][0-9]*$ ]] || {

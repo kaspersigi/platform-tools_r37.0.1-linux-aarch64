@@ -35,9 +35,11 @@ builds all eight executables, assembles the SDK directory, verifies the exact
 entry inventory, checks every ELF machine, rejects unpackaged shared-library
 dependencies, and runs smoke tests under QEMU when available.
 
-Local builds use `nproc` parallel jobs by default. Set `JOBS` explicitly to
-override that value. GitHub Actions uses four jobs to stay within the resource
-limits of the free hosted runner.
+Project policy requires every local build and validation run to use all
+processors reported by `nproc`. Do not set `JOBS=4` locally to imitate the
+hosted workflow; the build entry rejects a smaller local `JOBS` value.
+`JOBS` is reserved for CI, and GitHub Actions explicitly sets `JOBS=4` to
+stay within the resource limits of the free hosted runner.
 
 The generated archive contains:
 
