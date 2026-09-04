@@ -69,7 +69,8 @@ is intentional and is not hidden behind a false official build number.
 
 The packaged `lib64/libc++.so` is linked from Ubuntu 26.04's LLVM 22 AArch64
 static runtime and includes its C++ ABI implementation. It has no dependency
-on an unpackaged `libc++abi.so` or `libunwind.so`.
+on an unpackaged `libgcc_s.so.1`, `libc++abi.so`, or `libunwind.so`; validation
+applies the same `libgcc_s.so.1` rejection to every packaged executable.
 
 ## Repository dependencies
 

@@ -71,7 +71,7 @@ for name in "${executables[@]}"; do
 
     while IFS= read -r dependency; do
         case "$dependency" in
-            libc.so.6|libdl.so.2|libgcc_s.so.1|libm.so.6|libpthread.so.0|librt.so.1|ld-linux-aarch64.so.1) ;;
+            libc.so.6|libdl.so.2|libm.so.6|libpthread.so.0|librt.so.1|ld-linux-aarch64.so.1) ;;
             *) fail "$name depends on unpackaged shared library $dependency" ;;
         esac
     done < <(readelf -d "$candidate/$name" | sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p')
@@ -81,7 +81,7 @@ readelf -d "$candidate/lib64/libc++.so" | grep -Fq 'Library soname: [libc++.so]'
     fail "libc++.so has an unexpected SONAME"
 while IFS= read -r dependency; do
     case "$dependency" in
-        libc.so.6|libdl.so.2|libgcc_s.so.1|libm.so.6|libpthread.so.0|librt.so.1|ld-linux-aarch64.so.1) ;;
+        libc.so.6|libdl.so.2|libm.so.6|libpthread.so.0|librt.so.1|ld-linux-aarch64.so.1) ;;
         *) fail "libc++.so depends on unpackaged shared library $dependency" ;;
     esac
 done < <(readelf -d "$candidate/lib64/libc++.so" | sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p')
