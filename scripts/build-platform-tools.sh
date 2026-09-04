@@ -7,7 +7,17 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 project_root="$(cd -- "$script_dir/.." && pwd -P)"
 sources_dir="$project_root/sources"
 build_dir="$project_root/build"
-jobs="${JOBS:-$(nproc)}"
+host_jobs="$(nproc)"
+if [[ "${GITHUB_ACTIONS:-false}" == "true" ]]; then
+    jobs="${JOBS:-$host_jobs}"
+else
+    if [[ ${JOBS+x} == x && "$JOBS" != "$host_jobs" ]]; then
+        echo "error: local builds must use all $host_jobs processors reported by nproc" >&2
+        echo "       JOBS is reserved for GitHub Actions resource limits" >&2
+        exit 2
+    fi
+    jobs="$host_jobs"
+fi
 
 [[ "$jobs" =~ ^[1-9][0-9]*$ ]] || {
     echo "error: JOBS must be a positive integer" >&2

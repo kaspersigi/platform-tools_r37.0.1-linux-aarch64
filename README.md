@@ -37,7 +37,8 @@ dependencies, and runs smoke tests under QEMU when available.
 
 Project policy requires every local build and validation run to use all
 processors reported by `nproc`. Do not set `JOBS=4` locally to imitate the
-hosted workflow; the build entry rejects a smaller local `JOBS` value.
+hosted workflow; both the unified and component build entries reject a
+different local `JOBS` value.
 `JOBS` is reserved for CI, and GitHub Actions explicitly sets `JOBS=4` to
 stay within the resource limits of the free hosted runner.
 
