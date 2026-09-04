@@ -38,7 +38,9 @@ and the checksum-pinned Google x86_64 package, builds all eight executables,
 assembles the Platform-Tools directory, verifies the exact entry inventory,
 structurally parses every executable/shared ELF, rejects unpackaged
 shared-library dependencies, verifies and directly loads the component-local
-libc++ runtime, and runs smoke tests under QEMU when required.
+libc++ runtime, and runs smoke tests under QEMU when required. Generated
+`package.xml` metadata is parsed for the locked package identity and revision
+and must also match the checked-in template byte for byte.
 
 Incremental builds reuse sources only when their tracked diffs, non-ignored
 untracked-file content, nested repository revisions, upstream URLs, and the

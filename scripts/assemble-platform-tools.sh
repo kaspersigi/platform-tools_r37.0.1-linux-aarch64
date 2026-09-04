@@ -31,11 +31,9 @@ install -m 0644 "$reference_dir/source.properties" "$package_dir/source.properti
 
 install -m 0755 "$build_dir/extra/libc++.so" "$package_dir/lib64/libc++.so"
 
-sed \
-    -e "s/@MAJOR@/${PLATFORM_TOOLS_PACKAGE_VERSION%%.*}/" \
-    -e "s/@MINOR@/$(cut -d. -f2 <<< "$PLATFORM_TOOLS_PACKAGE_VERSION")/" \
-    -e "s/@MICRO@/${PLATFORM_TOOLS_PACKAGE_VERSION##*.}/" \
-    "$project_root/scripts/package.xml.in" > "$package_dir/package.xml"
+"$project_root/scripts/render-package-xml.sh" "$package_dir/package.xml"
+python3 -B "$project_root/scripts/check-package-xml.py" \
+    "$package_dir/package.xml" "$PLATFORM_TOOLS_PACKAGE_VERSION"
 chmod 0644 "$package_dir/package.xml"
 chmod 0755 "$package_dir" "$package_dir/lib64"
 

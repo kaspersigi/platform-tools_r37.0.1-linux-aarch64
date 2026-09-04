@@ -32,6 +32,7 @@ read_elf_dynamic_section() {
 
 [[ -d "$candidate" ]] || fail "candidate directory is missing: $candidate"
 "$project_root/tests/check-aarch64-elf-test.sh"
+python3 -B "$project_root/tests/package_xml_test.py"
 
 expected_entries=(
     NOTICE.txt
@@ -57,6 +58,12 @@ cleanup() {
     rm -rf -- "$temporary_dir"
 }
 trap cleanup EXIT
+"$project_root/scripts/render-package-xml.sh" "$temporary_dir/package.xml"
+cmp -s "$temporary_dir/package.xml" "$candidate/package.xml" ||
+    fail "package.xml differs from the pinned Linux AArch64 template"
+python3 -B "$project_root/scripts/check-package-xml.py" \
+    "$candidate/package.xml" "$PLATFORM_TOOLS_PACKAGE_VERSION" ||
+    fail "package.xml has invalid Platform-Tools metadata"
 find "$candidate" -mindepth 1 -printf '%P\n' | LC_ALL=C sort > "$candidate_list"
 printf '%s\n' "${expected_entries[@]}" | LC_ALL=C sort > "$reference_list"
 diff -u "$reference_list" "$candidate_list" || fail "candidate entry list is not complete"
