@@ -31,9 +31,10 @@ The dependency script enables Ubuntu's `arm64` multiarch repository, selects
 Ubuntu Ports for that architecture, and installs the AArch64 development
 libraries used by the cross build. The build
 script downloads pinned sources and the checksum-pinned Google x86_64 package,
-builds all eight executables, assembles the SDK directory, verifies the exact
-entry inventory, checks every ELF machine, rejects unpackaged shared-library
-dependencies, and runs smoke tests under QEMU when available.
+builds all eight executables, assembles the Platform-Tools directory, verifies
+the exact entry inventory, checks every ELF machine, rejects unpackaged
+shared-library dependencies, verifies and directly loads the component-local
+libc++ runtime, and runs smoke tests under QEMU when required.
 
 Project policy requires every local build and validation run to use all
 processors reported by `nproc`. Do not set `JOBS=4` locally to imitate the

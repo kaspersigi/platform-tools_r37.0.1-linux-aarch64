@@ -35,9 +35,13 @@ expected_entries=(
     sqlite3
 )
 
-candidate_list="$(mktemp)"
-reference_list="$(mktemp)"
-trap 'rm -f -- "$candidate_list" "$reference_list"' EXIT
+temporary_dir="$(mktemp -d)"
+candidate_list="$temporary_dir/candidate.list"
+reference_list="$temporary_dir/reference.list"
+cleanup() {
+    rm -rf -- "$temporary_dir"
+}
+trap cleanup EXIT
 find "$candidate" -mindepth 1 -printf '%P\n' | LC_ALL=C sort > "$candidate_list"
 printf '%s\n' "${expected_entries[@]}" | LC_ALL=C sort > "$reference_list"
 diff -u "$reference_list" "$candidate_list" || fail "candidate entry list is not complete"
@@ -73,6 +77,8 @@ for name in "${executables[@]}"; do
     done < <(readelf -d "$candidate/$name" | sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p')
 done
 readelf -h "$candidate/lib64/libc++.so" | grep -Eq 'Machine:.*AArch64' || fail "libc++.so is not AArch64"
+readelf -d "$candidate/lib64/libc++.so" | grep -Fq 'Library soname: [libc++.so]' ||
+    fail "libc++.so has an unexpected SONAME"
 while IFS= read -r dependency; do
     case "$dependency" in
         libc.so.6|libdl.so.2|libgcc_s.so.1|libm.so.6|libpthread.so.0|librt.so.1|ld-linux-aarch64.so.1) ;;
@@ -107,6 +113,12 @@ case "$(uname -m)" in
         ;;
 esac
 
+command -v aarch64-linux-gnu-gcc >/dev/null 2>&1 ||
+    fail "aarch64-linux-gnu-gcc is required for the runtime load probe"
+aarch64-linux-gnu-gcc "$project_root/tests/dlopen_probe.c" -ldl \
+    -o "$temporary_dir/dlopen-probe"
+"${runner[@]}" "$temporary_dir/dlopen-probe" "$candidate/lib64/libc++.so"
+
 adb_version="$("${runner[@]}" "$candidate/adb" version)"
 printf '%s\n' "$adb_version"
 grep -Fq \
@@ -133,4 +145,4 @@ set -e
 [[ "$hprof_status" == "2" && "$hprof_help" == *"infile outfile"* ]] || \
     fail "hprof-conv help smoke test failed"
 
-echo "Validated complete Platform-Tools 37.0.1 layout and AArch64 ELF architecture."
+echo "Validated complete Platform-Tools 37.0.1 layout, AArch64 ELF architecture, and runtime closure."
